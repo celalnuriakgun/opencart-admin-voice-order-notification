@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+	<name>Admin Voice Order Notification</name>
+	<code>admin_voice_order_notification</code>
+	<version>1.0</version>
+	<author>Celal Nuri Akgün</author>
+	<author>https://celalnuriakgun.com</author>
+ 	
+ 	<file path="admin/controller/sale/order.php">
+		<operation>
+			<search><![CDATA[public function index() {]]></search>
+			<add position="before"><![CDATA[
+				public function getTotalForNotification() {
+					$total = $this->db->query("SELECT COUNT(*) as total FROM " . DB_PREFIX . "order WHERE order_status_id != 0")->row['total'];
+
+					if ( isset($this->session->data['orderTotalNotify']) && $total > $this->session->data['orderTotalNotify'] ) {
+						echo 'true';
+					} else {
+						echo 'false';
+					}
+
+					$this->session->data['orderTotalNotify'] = $total;
+				}
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="admin/view/template/common/footer.twig">
+		<operation>
+			<search><![CDATA[<footer id="footer">]]></search>
+			<add position="before"><![CDATA[
+				<script type="text/javascript">
+					function playMusic() {
+						var audioElement = $("<audio>");
+					    audioElement.attr({
+					        'src'	   : 'view/voice/cash.ogg',
+					        'autoplay' : 'autoplay',
+					    });
+					}
+
+					setInterval(function(){
+						$.get("index.php?route=sale/order/getTotalForNotification&user_token={{ user_token }}", function(data, status){
+							if (data == 'true') {
+								playMusic();				
+							}
+					  	});
+					}, 10000);
+				</script>
+			]]></add>
+		</operation>
+	</file>
+</modification>
